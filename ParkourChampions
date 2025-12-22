@@ -1,0 +1,599 @@
+Window:Tag({
+    Title = "Premium",
+    Icon = "github",
+    Color = Color3.fromHex("1F1F1F"),
+    Radius = 13,
+})
+-- ==================== AUTO FARM TAB ====================
+local AutoFarmTab = Window:Tab({
+    Title = "Auto Farm",
+    Icon = "target", -- ไอคอน target หรือ repeat
+    Locked = false,
+})
+
+local AutoFarmSection = AutoFarmTab:Section({ 
+    Title = "Story Quest 1",
+})
+
+-- ตัวแปรสำหรับระบบ Auto Farm
+local isAutoFarming = false
+local autoFarmTask = nil
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+-- ฟังก์ชันสำหรับเคลื่อนที่ด้วย Tween
+local function tweenToPosition(positionCFrame, duration)
+    local character = localPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then
+        return false
+    end
+    
+    local humanoidRootPart = character.HumanoidRootPart
+    
+    -- สร้าง TweenInfo
+    local tweenInfo = TweenInfo.new(
+        duration,
+        Enum.EasingStyle.Linear,
+        Enum.EasingDirection.InOut
+    )
+    
+    -- สร้าง Tween
+    local tween = TweenService:Create(humanoidRootPart, tweenInfo, {
+        CFrame = positionCFrame
+    })
+    
+    -- เริ่ม Tween
+    tween:Play()
+    
+    -- รอจนกว่า Tween จะเสร็จสิ้น
+    tween.Completed:Wait()
+    return true
+end
+
+-- ฟังก์ชันเริ่ม Auto Farm
+local function startAutoFarm()
+    if isAutoFarming then return end
+    
+    isAutoFarming = true
+    
+    autoFarmTask = task.spawn(function()
+        local missionServiceRF = game:GetService("ReplicatedStorage"):WaitForChild("Packages")
+            :WaitForChild("Knit"):WaitForChild("Services")
+            :WaitForChild("MissionService"):WaitForChild("RF")
+        
+        local takeMission = missionServiceRF:WaitForChild("TakeMission")
+        local finishMission = missionServiceRF:WaitForChild("FinishMission")
+        local claimRewards = missionServiceRF:WaitForChild("ClaimMissionRewards")
+        
+        while isAutoFarming do
+            -- รับภารกิจ
+            local args = {"Mission1"}
+            takeMission:InvokeServer(unpack(args))
+            task.wait(2)
+            
+            -- เคลื่อนที่ไปยังจุดต่างๆ
+            tweenToPosition(CFrame.new(-2329.982177734375, 4157.14306640625, -4670.42041015625), 2)
+            tweenToPosition(CFrame.new(-3161.441162109375, 3761.62744140625, -4231.6005859375), 2)
+            tweenToPosition(CFrame.new(-4374.36669921875, 3648.06494140625, -5956.15234375), 3)
+            task.wait(2)
+            
+            tweenToPosition(CFrame.new(-2866.304443359375, 3697.771240234375, -5395.833984375), 2)
+            task.wait(1)
+            
+            -- ส่งภารกิจและรับรางวัล
+            finishMission:InvokeServer(unpack(args))
+            claimRewards:InvokeServer()
+            
+            -- รอก่อนเริ่มรอบใหม่ (ปรับได้ตามต้องการ)
+            task.wait(1)
+        end
+        
+        isAutoFarming = false
+    end)
+end
+
+-- ฟังก์ชันหยุด Auto Farm
+local function stopAutoFarm()
+    if not isAutoFarming then return end
+    
+    isAutoFarming = false
+    if autoFarmTask then
+        task.cancel(autoFarmTask)
+        autoFarmTask = nil
+    end
+end
+
+-- Toggle สำหรับเปิดปิด Auto Farm
+local AutoFarmToggle = AutoFarmSection:Toggle({
+    Title = "Auto Farm Story Quest 1",
+    Desc = "Toggle Auto Farming On/Off",
+    Type = "Checkbox",
+    Value = true,
+    Callback = function(value)
+        if value then
+            startAutoFarm()
+        else
+            stopAutoFarm()
+        end
+    end
+})
+
+-- ==================== AUTO SPIN TAB ====================
+local AutoSpinTab = Window:Tab({
+    Title = "Auto Spin",
+    Icon = "refresh-cw",
+    Locked = false,
+})
+
+local AutoSpinSection = AutoSpinTab:Section({ 
+    Title = "Spin Configuration",
+})
+
+-- ตัวแปรสำหรับระบบ Auto Spin
+local selectedOptions = {}
+local isAutoSpinning = false
+local autoSpinTask = nil
+local spinInProgress = false -- เพิ่มตัวแปรตรวจสอบว่ากำลังสปินอยู่หรือไม่
+
+-- ฟังก์ชันแปลง array เป็น lookup table
+local function arrayToLookup(arr)
+    local lookup = {}
+    for _, v in ipairs(arr) do
+        lookup[v] = true
+    end
+    return lookup
+end
+
+-- ฟังก์ชันแสดง Notification
+local function showNotification(title, content, icon)
+    WindUI:Notify({
+        Title = title,
+        Content = content,
+        Duration = 3,
+        Icon = icon
+    })
+end
+
+-- รายการตัวละครทั้งหมด
+local allCharacters = {
+    "Gaado", "Zoren", "Edward", 
+    "Gen", "Kallui", "Torodoki", 
+    "Sakuse", "Yuroichi", 
+    "Koku", "Stretch Man", 
+    "Zaruto", "100% Hero", "The Honored One"
+}
+
+-- รายการเริ่มต้นที่เลือก
+local defaultSelected = {"Koku", "Stretch Man", "Zaruto", "100% Hero", "The Honored One"}
+
+-- Dropdown สำหรับเลือกตัวละครที่ต้องการหยุด
+local characterDropdown = AutoSpinSection:Dropdown({
+    Title = "Auto Spin - Select Results to Stop",
+    Desc = "Select characters to stop on",
+    Values = allCharacters,
+    Value = defaultSelected,
+    Multi = true,
+    AllowNone = false,
+    Callback = function(option)
+        selectedOptions = option
+        if #option > 0 then
+            showNotification(
+                "Selection Updated",
+                "Selected " .. #option .. " items",
+                "check"
+            )
+        end
+    end
+})
+
+-- ฟังก์ชันตรวจสอบว่าการสปินเสร็จสิ้นแล้วหรือยัง
+local function isSpinCompleted()
+    -- ตรวจสอบจาก UI ว่าการสปินเสร็จสิ้นแล้ว
+    local spinGui = game.Players.LocalPlayer.PlayerGui:FindFirstChild("Spins")
+    if not spinGui then return false end
+    
+    local slotList = spinGui:FindFirstChild("Slots")
+    if not slotList then return false end
+    
+    local styles = slotList:FindFirstChild("Styles")
+    if not styles then return false end
+    
+    local slot = styles:FindFirstChild("SlotList")
+    if not slot then return false end
+    
+    local slot1 = slot:FindFirstChild("Slot1")
+    if not slot1 then return false end
+    
+    local base = slot1:FindFirstChild("Base")
+    if not base then return false end
+    
+    local title = base:FindFirstChild("Title")
+    if not title then return false end
+    
+    -- ถ้าข้อความไม่ว่างแสดงว่าการสปินเสร็จสิ้น
+    return title.Text ~= ""
+end
+
+-- ฟังก์ชันรอจนกว่าการสปินจะเสร็จสิ้น
+local function waitForSpinCompletion(maxWaitTime)
+    local startTime = tick()
+    
+    while tick() - startTime < maxWaitTime do
+        if isSpinCompleted() then
+            -- รออีกนิดเพื่อให้แอนิเมชั่นเสร็จสมบูรณ์
+            task.wait(0.5)
+            return true
+        end
+        task.wait(0.1)
+    end
+    
+    return false
+end
+
+-- ฟังก์ชันอ่านผลลัพธ์สปิน
+local function getSpinResult()
+    if not isSpinCompleted() then
+        return nil
+    end
+    
+    local title = game.Players.LocalPlayer.PlayerGui.Spins.Slots.Styles.SlotList.Slot1.Base.Title
+    return title.Text
+end
+
+-- ฟังก์ชันเริ่ม Auto Spin
+local function startAutoSpin(selectedItems)
+    if isAutoSpinning then return end
+    
+    isAutoSpinning = true
+    spinInProgress = false
+    
+    showNotification(
+        "Auto Spin Started",
+        "Looking for selected results...\nSelected: " .. #selectedItems .. " items",
+        "loader"
+    )
+    
+    -- ใช้ remote ตามโค้ดเดิมของคุณ
+    local spinFunction = game:GetService("ReplicatedStorage"):WaitForChild("Packages")
+        :WaitForChild("Knit"):WaitForChild("Services")
+        :WaitForChild("CharacterService"):WaitForChild("RF")
+        :WaitForChild("Spin")
+    
+    local targetLookup = arrayToLookup(selectedItems)
+    
+    autoSpinTask = task.spawn(function()
+        local args = {1}
+        local spinCount = 0
+        
+        while isAutoSpinning do
+            -- ตรวจสอบว่ากำลังสปินอยู่หรือไม่
+            if spinInProgress then
+                task.wait(0.1)
+                continue
+            end
+            
+            spinCount = spinCount + 1
+            spinInProgress = true
+            
+            print("[Auto Spin] Starting spin #" .. spinCount)
+            
+            -- เรียกสปิน
+            local success, errorMsg = pcall(function()
+                spinFunction:InvokeServer(unpack(args))
+            end)
+            
+            if not success then
+                print("[Auto Spin] Spin failed:", errorMsg)
+                spinInProgress = false
+                task.wait(1)
+                continue
+            end
+            
+            print("[Auto Spin] Waiting for spin completion...")
+            
+            -- รอจนกว่าการสปินจะเสร็จสิ้น (รอสูงสุด 10 วินาที)
+            local spinCompleted = waitForSpinCompletion(10)
+            
+            if not spinCompleted then
+                print("[Auto Spin] Spin timeout")
+                spinInProgress = false
+                continue
+            end
+            
+            -- อ่านผลลัพธ์
+            local spinResult = getSpinResult()
+            
+            if spinResult then
+                print("[Auto Spin] Spin #" .. spinCount .. ": " .. spinResult)
+                
+                -- เช็คว่าได้ของในรายการที่เลือกหรือไม่
+                if targetLookup[spinResult] then
+                    showNotification(
+                        "Got Selected Result",
+                        "Result: " .. spinResult .. "\nAuto Spin stopped",
+                        "check-circle"
+                    )
+                    
+                    spinInProgress = false
+                    isAutoSpinning = false
+                    if AutoSpinToggle then
+                        task.wait(0.5) -- รอสักครู่ก่อนปิด
+                        AutoSpinToggle:Set(false)
+                    end
+                    break
+                else
+                    print("[Auto Spin] Result not in selected list, continuing...")
+                end
+            else
+                print("[Auto Spin] Failed to get spin result")
+            end
+            
+            spinInProgress = false
+            task.wait(1) -- รอ 1 วินาทีก่อนสปินครั้งต่อไป
+        end
+        
+        isAutoSpinning = false
+        spinInProgress = false
+    end)
+end
+
+-- ฟังก์ชันหยุด Auto Spin
+local function stopAutoSpin()
+    if not isAutoSpinning then return end
+    
+    isAutoSpinning = false
+    spinInProgress = false
+    
+    if autoSpinTask then
+        task.cancel(autoSpinTask)
+        autoSpinTask = nil
+    end
+    
+    showNotification("Auto Spin Stopped", "Auto Spin has been stopped", "stop-circle")
+end
+
+local Button = AutoSpinTab:Button({
+    Title = "Redeem All Codes",
+    Color = Color3.fromHex("#a2ff30"),
+    Justify = "Center",
+    IconAlign = "Left",
+    Icon = "gift",
+    Callback = function()
+        local codes = {"Launch", "DelayChampions", "RELEASE"}
+        local redeemRF = game:GetService("ReplicatedStorage"):WaitForChild("Packages")
+            :WaitForChild("Knit"):WaitForChild("Services")
+            :WaitForChild("GameService"):WaitForChild("RF")
+            :WaitForChild("RedeemCode")
+        
+        for _, code in ipairs(codes) do
+            redeemRF:InvokeServer(code)
+            task.wait(5)
+        end
+    end
+})
+
+-- Toggle สำหรับเปิดปิด Auto Spin
+local AutoSpinToggle = AutoSpinSection:Toggle({
+    Title = "Auto Spin",
+    Desc = "Toggle Auto Spin On/Off",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(value)
+        if value then
+            if #selectedOptions == 0 then
+                showNotification("No Selection", "Please select at least 1 result", "alert-circle")
+                AutoSpinToggle:Set(false)
+                return
+            end
+            
+            if isAutoSpinning then
+                showNotification("Already Running", "Auto Spin is already running", "loader")
+                return
+            end
+            
+            startAutoSpin(selectedOptions)
+        else
+            stopAutoSpin()
+        end
+    end
+})
+
+-- ==================== SETTINGS TAB ====================
+local SettingsTab = Window:Tab({
+    Title = "Settings",
+    Icon = "settings",
+    Locked = false,
+})
+
+local SettingsSection = SettingsTab:Section({ 
+    Title = "Button Display Settings",
+})
+
+-- ==================== ANTI-AFK SETTING ====================
+-- ตัวแปรสำหรับ Anti-AFK
+local antiAFKEnabled = false
+local antiAFKConnection = nil
+
+-- ฟังก์ชันเริ่ม Anti-AFK
+local function startAntiAFK()
+    if antiAFKEnabled then return end
+    
+    antiAFKEnabled = true
+    local vu = game:GetService("VirtualUser")
+    
+    -- สร้าง connection สำหรับป้องกัน AFK
+    antiAFKConnection = game:GetService("Players").LocalPlayer.Idled:Connect(function()
+        vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        task.wait(1)
+        vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    end)
+end
+
+-- ฟังก์ชันหยุด Anti-AFK
+local function stopAntiAFK()
+    if not antiAFKEnabled then return end
+    
+    antiAFKEnabled = false
+    
+    -- ตัดการเชื่อมต่อ
+    if antiAFKConnection then
+        antiAFKConnection:Disconnect()
+        antiAFKConnection = nil
+    end
+end
+
+-- เพิ่ม Toggle Anti-AFK ใน Settings Section
+SettingsSection:Toggle({
+    Title = "Anti-AFK",
+    Desc = "Prevent being kicked for inactivity",
+    Icon = "user-check",
+    Type = "Checkbox",
+    Value = true,
+    Callback = function(state) 
+        if state then
+            startAntiAFK()
+        else
+            stopAntiAFK()
+        end
+    end
+})
+
+local showFPS = true
+local showTime = true
+local showPing = true
+local showMemory = false
+local RunService = game:GetService("RunService")
+
+local currentFPS = 60
+local function startFPSMonitor()
+    local frames = 0
+    local lastSecond = math.floor(tick())
+    
+    RunService.Heartbeat:Connect(function()
+        frames = frames + 1
+        local currentSecond = math.floor(tick())
+        
+        if currentSecond > lastSecond then
+            currentFPS = frames
+            frames = 0
+            lastSecond = currentSecond
+        end
+    end)
+end
+
+task.spawn(startFPSMonitor)
+
+local currentPing = 0
+local function startPingMonitor()
+    local stats = game:GetService("Stats")
+    
+    while true do
+        pcall(function()
+            local pingValue = stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+            currentPing = math.floor(pingValue)
+        end)
+        task.wait(2)
+    end
+end
+
+task.spawn(startPingMonitor)
+
+local currentMemory = 0
+local function startMemoryMonitor()
+    while true do
+        currentMemory = math.floor(collectgarbage("count") / 1024 * 100) / 100
+        task.wait(5)
+    end
+end
+
+task.spawn(startMemoryMonitor)
+
+local function updateUIButton()
+    local parts = {"GRIMMHUB"}
+    
+    if showTime then
+        table.insert(parts, os.date("%H:%M"))
+    end
+    
+    if showFPS then
+        table.insert(parts, currentFPS .. " FPS")
+    end
+    
+    if showPing and currentPing > 0 then
+        table.insert(parts, currentPing .. "ms")
+    end
+    
+    if showMemory then
+        table.insert(parts, currentMemory .. " MB")
+    end
+    
+    local buttonText = table.concat(parts, " | ")
+    
+    Window:EditOpenButton({
+        Title = buttonText,
+        Icon = "monitor",
+        CornerRadius = UDim.new(0,16),
+        StrokeThickness = 2,
+        Color = ColorSequence.new(
+            Color3.fromHex("FF0F7B"), 
+            Color3.fromHex("F89B29")
+        ),
+        OnlyMobile = false,
+        Enabled = true,
+        Draggable = true,
+    })
+end
+
+local function startUIUpdater()
+    while true do
+        updateUIButton()
+        task.wait(1)
+    end
+end
+
+task.spawn(startUIUpdater)
+
+SettingsSection:Toggle({
+    Title = "Show Time",
+    Desc = "Display current time on button",
+    Icon = "clock",
+    Type = "Checkbox",
+    Value = showTime,
+    Callback = function(state) 
+        showTime = state
+    end
+})
+
+SettingsSection:Toggle({
+    Title = "Show FPS",
+    Desc = "Display FPS counter on button",
+    Icon = "zap",
+    Type = "Checkbox",
+    Value = showFPS,
+    Callback = function(state) 
+        showFPS = state
+    end
+})
+
+SettingsSection:Toggle({
+    Title = "Show Ping",
+    Desc = "Display network ping on button",
+    Icon = "signal",
+    Type = "Checkbox",
+    Value = showPing,
+    Callback = function(state) 
+        showPing = state
+    end
+})
+
+SettingsSection:Toggle({
+    Title = "Show Memory",
+    Desc = "Display memory usage on button",
+    Icon = "hard-drive",
+    Type = "Checkbox",
+    Value = showMemory,
+    Callback = function(state) 
+        showMemory = state
+    end
+})

@@ -303,7 +303,7 @@ local function buildUI()
     getKeyTxt.Position = UDim2.new(0.5, 8, 0, 0)
     getKeyTxt.AnchorPoint = Vector2.new(0.5, 0)
     getKeyTxt.BackgroundTransparency = 1
-    getKeyTxt.Text = "Get Key" -- English
+    getKeyTxt.Text = "  Get Key" -- English
     getKeyTxt.TextColor3 = cfg.primaryColor -- White
     getKeyTxt.TextSize = 12
     getKeyTxt.Font = Enum.Font.FredokaOne

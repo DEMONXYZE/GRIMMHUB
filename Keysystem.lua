@@ -49,7 +49,7 @@ local function createNotification(title, content, duration, icon)
         ui:Notify({
             Title = title,
             Content = content,
-            Duration = duration or 3,
+            Duration = duration or 1,
             Icon = icon or "shield" -- Default icon
         })
         return { Close = function() end } -- Return dummy table for compatibility
@@ -430,7 +430,7 @@ local function validateKey(ui)
     
     if ok then
         saveKey(key) -- Save key
-        createNotification("Success!", "Key is valid. Loading script...", 3, "check")
+        createNotification("Success!", "Key is valid. Loading script...", 1, "check")
         -- Animation for closing window
         TweenService:Create(ui.main, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
             Position = UDim2.new(0.5, 0, -0.5, 0),
@@ -460,7 +460,7 @@ local function validateKey(ui)
         
         return true
     else
-        createNotification("Invalid Key", "The key you entered is invalid", 3, "x")
+        createNotification("Invalid Key", "The key you entered is invalid", 1, "x")
         return false
     end
 end
@@ -470,7 +470,7 @@ local function autoVerify(ui)
     local key = loadKey()
     if key and key ~= "" then
         ui.box.Text = key -- Put key into input box
-        createNotification("Auto Mode", "Auto-verifying key...", 2, "loader")
+        createNotification("Auto Mode", "Auto-verifying key...", 1, "loader")
         
         -- Wait a bit for UI to load completely
         task.wait(1)
@@ -528,7 +528,7 @@ local function main()
                 setclipboard(link) -- Copy link
                 createNotification("Link Copied", "Key link copied to clipboard", 3, "clipboard")
             else
-                createNotification("Failed", "Unable to generate key link", 3, "x")
+                createNotification("Failed", "Unable to generate key link", 2, "x")
             end
         else
             createNotification("Error", "Failed to load SDK. Please try again", 3, "exclamation")

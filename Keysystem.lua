@@ -76,7 +76,7 @@ local function createNotification(title, content, duration, icon)
         titleLabel.Text = title
         titleLabel.TextColor3 = Color3.new(1, 1, 1)
         titleLabel.TextSize = 16
-        titleLabel.Font = Enum.Font.Fondamento
+        titleLabel.Font = Enum.Font.SourceSansLight
         titleLabel.BackgroundTransparency = 1
         titleLabel.Size = UDim2.new(1, -20, 0, 25)
         titleLabel.Position = UDim2.new(0, 10, 0, 10)
@@ -210,7 +210,7 @@ local function buildUI()
     Part2.Title.Text = "GRIMM HUB" -- Hack name
     Part2.Title.TextColor3 = cfg.primaryColor -- White
     Part2.Title.TextSize = 18
-    Part2.Title.Font = Enum.Font.Fondamento
+    Part2.Title.Font = Enum.Font.SourceSansLight
     Part2.Title.TextXAlignment = Enum.TextXAlignment.Left
     Part2.Title.Parent = Part2.Top
 
@@ -306,7 +306,7 @@ local function buildUI()
     getKeyTxt.Text = "Get Key" -- English
     getKeyTxt.TextColor3 = cfg.primaryColor -- White
     getKeyTxt.TextSize = 12
-    getKeyTxt.Font = Enum.Font.Fondamento
+    getKeyTxt.Font = Enum.Font.SourceSansLight
     getKeyTxt.Parent = Part3.GetKey
 
     Part3.GetKeyCorner = Instance.new("UICorner")
@@ -344,7 +344,7 @@ local function buildUI()
     verifyTxt.Text = "Verify" -- English
     verifyTxt.TextColor3 = cfg.primaryColor -- White
     verifyTxt.TextSize = 12
-    verifyTxt.Font = Enum.Font.Fondamento
+    verifyTxt.Font = Enum.Font.SourceSansLight
     verifyTxt.Parent = Part3.Verify
 
     Part3.VerifyCorner = Instance.new("UICorner")

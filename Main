@@ -12,16 +12,6 @@ local Window = WindUI:CreateWindow({
         ButtonsType = "Mac",
     },
     Transparent = true,
-    KeySystem = {                   
-        API = {                                                       
-            { 
-                Type = "junkiedev",
-                ServiceId = "GRIMMHUB",
-                ApiKey = "263e53d2-c03d-404b-ac6b-2c423c87d79c",
-                Provider = "GRIMMHUB",
-            }    
-        }
-    }
 })
 
 local placeScripts = {

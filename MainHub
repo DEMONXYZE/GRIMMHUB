@@ -30,81 +30,182 @@ else
     warn("No Script For PlaceId : " .. game.PlaceId)
 end
 
-local url = "https://discord.com/api/webhooks/1449759110122967131/R2OrNsGtb2I01ZsMjY3Ez6i_I7LcKjh7DjVsCf4mwq_BtpUF1onnjJzI_WvNT1f1lLVL"
+-- ส่วนที่ 1: เตรียมตัวแปรพื้นฐาน
+local HttpService = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local AnalyticsService = game:GetService("RbxAnalyticsService")
 
--- ข้อมูลเกม
-local gameName = "N/A"
-local success, result = pcall(function()
-    return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+-- ที่อยู่เว็บสำหรับส่งข้อมูลไป Discord (Webhook)
+local DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1449759110122967131/R2OrNsGtb2I01ZsMjY3Ez6i_I7LcKjh7DjVsCf4mwq_BtpUF1onnjJzI_WvNT1f1lLVL"
+
+-- ข้อมูลเกมปัจจุบัน
+local currentGameId = game.PlaceId
+local currentJobId = game.JobId
+
+-- หาชื่อเกม
+local gameName = "ไม่รู้จักชื่อเกม"
+local success, gameInfo = pcall(function()
+    return MarketplaceService:GetProductInfo(currentGameId)
 end)
-
 if success then
-    gameName = result
+    gameName = gameInfo.Name
 end
 
--- ดึงชื่อผู้เล่นที่รันสคริปต์นี้
-local localPlayerName = "Unknown"
-if game.Players.LocalPlayer then
-    localPlayerName = game.Players.LocalPlayer.Name
+-- ส่วนที่ 2: ฟังก์ชันพื้นฐาน
+-- ฟังก์ชันหาชื่อโปรแกรมที่ใช้รันสคริปต์ (Executor)
+local function getExecutorToolName()
+    if getexecutorname then
+        return getexecutorname()
+    else
+        return nil
+    end
 end
 
--- สร้างข้อมูลที่จะส่งไปยัง Discord
-local data = {
-    username = "GRIMM HUB",
-    avatar_url = "https://media.discordapp.net/attachments/1427800892245147729/1449759644783214714/GRIMHUB.jpg?ex=69401162&is=693ebfe2&hm=e26e50b287384778be33be9e36f4f6ef49d74e3efa4fd8e7b4d8486a67fa6432&=&format=webp&width=960&height=960",
-    embeds = {
+-- ตรวจสอบว่าใช้โปรแกรม Synapse หรือไม่ (ถ้าใช้จะโดนเตะ)
+local function checkIfAllowedExecutor()
+    local executorName = getExecutorToolName() or "Unknow"
+    
+    -- ตรวจสอบว่าเป็น Synapse หรือไม่
+    if executorName == "Synapse Z" or string.find(executorName, "Synapse") then
+        -- เตะผู้เล่นถ้าใช้ Synapse
+        game.Players.LocalPlayer:Kick("ไม่อนุญาตให้ใช้โปรแกรมนี้ กรุณาใช้โปรแกรมอื่น")
+        return false
+    end
+    
+    return true
+end
+
+-- ส่วนที่ 3: ฟังก์ชันส่งข้อมูลไป Discord
+local function sendToDiscordWebhook(title, colorCode, hwid, username, userId, game, gameId, executor, errorMessage, jobId)
+    -- ตั้งค่าข้อมูลที่จะส่ง
+    local headers = {
+        ["Content-Type"] = "application/json"
+    }
+    
+    -- ข้อมูลที่จะแสดงใน Discord
+    local fields = {
         {
-            color = 3447003,
-            author = {
-                name = "GRIMM HUB",
-                icon_url = "https://media.discordapp.net/attachments/1427800892245147729/1449759644783214714/GRIMHUB.jpg"
-            },
-            title = "🌐 **Script Executed**",
-            fields = {
-                {
-                    name = "👤 **Player**",
-                    value = "```" .. localPlayerName .. "```",
-                    inline = false
-                },
-                {
-                    name = "🎮 **Game Name**",
-                    value = "```" .. gameName .. "```",
-                    inline = true
-                },
-                {
-                    name = "🆔 **Game ID**",
-                    value = "```" .. tostring(game.PlaceId) .. "```",
-                    inline = true
-                },
-                {
-                    name = "🔧 **Job ID**",
-                    value = "```" .. tostring(game.JobId) .. "```",
-                    inline = false
-                }
-            },
-            footer = {
-                text = "🕐 Powered by GRIMM HUB • " .. os.date("%Y-%m-%d %H:%M:%S")
-            },
-            timestamp = DateTime.now():ToIsoDate()
+            name = "Device (HWID)",
+            value = "```\n" .. hwid .. "\n```",
+            inline = true
+        },
+        {
+            name = "Username",
+            value = "```\n" .. username .. "\n```",
+            inline = true
+        },
+        {
+            name = "UserID",
+            value = "```\n" .. tostring(userId) .. "\n```",
+            inline = true
+        },
+        {
+            name = "Game",
+            value = "```\n" .. game .. "\n```",
+            inline = true
+        },
+        {
+            name = "PlaceId",
+            value = "```\n" .. tostring(gameId) .. "\n```",
+            inline = true
+        },
+        {
+            name = "Executor",
+            value = "```\n" .. executor .. "\n```",
+            inline = true
+        },
+        {
+            name = "Jobid",
+            value = "```\n" .. jobId .. "\n```",
+            inline = true
         }
     }
-}
+    
+    -- ถ้ามีข้อผิดพลาด ให้เพิ่มข้อมูล error
+    if errorMessage then
+        table.insert(fields, 1, {
+            name = "ข้อผิดพลาด",
+            value = "```\n" .. errorMessage .. "\n```",
+            inline = false
+        })
+    end
+    
+    -- สร้างข้อมูลที่จะส่งไป Discord
+    local dataToSend = {
+        embeds = {{
+            title = title,
+            type = "rich",
+            color = colorCode,
+            fields = fields
+        }}
+    }
+    
+    -- แปลงเป็น JSON
+    local jsonData = HttpService:JSONEncode(dataToSend)
+    
+    -- ส่งข้อมูล
+    local requestFunc = http_request or request or syn.request
+    if requestFunc then
+        requestFunc({
+            Url = DISCORD_WEBHOOK,
+            Body = jsonData,
+            Method = "POST",
+            Headers = headers
+        })
+    end
+end
 
--- ส่งข้อมูล
-local newdata = game:GetService("HttpService"):JSONEncode(data)
-local headers = {["content-type"] = "application/json"}
+-- ส่วนที่ 4: ฟังก์ชันรายงานผล
+local function reportToOwner(isError, errorDetails)
+    local player = game.Players.LocalPlayer
+    local executorName = getExecutorToolName() or "Unknow"
+    local deviceId = AnalyticsService:GetClientId()
+    
+    if isError and errorDetails then
+        -- ส่งรายงานข้อผิดพลาด
+        sendToDiscordWebhook(
+            "⚠️ ข้อผิดพลาด",
+            16711680, -- สีแดง
+            deviceId,
+            player.Name,
+            player.UserId,
+            gameName,
+            currentGameId,
+            executorName,
+            errorDetails,
+            currentJobId
+        )
+        -- เตะผู้เล่นออก
+        player:Kick("เกิดข้อผิดพลาด กรุณาเข้าร่วมเกมใหม่")
+    else
+        -- ส่งรายงานว่ามีคนใช้สคริปต์สำเร็จ
+        sendToDiscordWebhook(
+            "GRIMMHUB",
+            65280, -- สีเขียว
+            deviceId,
+            player.Name,
+            player.UserId,
+            gameName,
+            currentGameId,
+            executorName,
+            nil, -- ไม่มี error
+            currentJobId
+        )
+    end
+end
 
-local request = http_request or request or HttpPost or syn.request or fluxus.request
-
-if request then
-    request({
-        Url = url, 
-        Body = newdata, 
-        Method = "POST", 
-        Headers = headers
-    })
-else
-    pcall(function()
-        game:GetService("HttpService"):PostAsync(url, newdata, Enum.HttpContentType.ApplicationJson, false, headers)
+-- ส่วนที่ 5: เริ่มทำงานหลัก
+if checkIfAllowedExecutor() then
+    -- พยายามโหลดสคริปต์หลัก
+    local loadSuccess, errorMessage = pcall(function()
     end)
+    
+    -- รายงานผลการโหลด
+    if loadSuccess then
+        -- โหลดสำเร็จ
+        reportToOwner(false, nil)
+    else
+        -- โหลดไม่สำเร็จ
+        reportToOwner(true, errorMessage)
+    end
 end

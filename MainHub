@@ -164,7 +164,7 @@ local function reportToOwner(isError, errorDetails)
     if isError and errorDetails then
         -- ส่งรายงานข้อผิดพลาด
         sendToDiscordWebhook(
-            "⚠️ ข้อผิดพลาด",
+            "⚠️ ข้อผิดพลาด 1.5.2",
             16711680, -- สีแดง
             deviceId,
             player.Name,
@@ -180,7 +180,7 @@ local function reportToOwner(isError, errorDetails)
     else
         -- ส่งรายงานว่ามีคนใช้สคริปต์สำเร็จ
         sendToDiscordWebhook(
-            "GRIMMHUB",
+            "GRIMMHUB 1.5.2",
             65280, -- สีเขียว
             deviceId,
             player.Name,

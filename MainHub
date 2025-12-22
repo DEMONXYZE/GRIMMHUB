@@ -17,7 +17,7 @@ local Window = WindUI:CreateWindow({
 local placeScripts = {
     [139598620873181] = function()
         print("MUGEN")
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/DEMONXYZE/GRIMMHUB/refs/heads/main/GRIMMHUB.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/DEMONXYZE/GRIMMHUB/refs/heads/main/MUGEN.lua"))()
     end,
     
     [3351674303] = function()

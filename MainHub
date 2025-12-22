@@ -12,6 +12,11 @@ local placeScripts = {
     [126321385836672] = function()
         print("ParkourChampions")
         loadstring(game:HttpGet("https://raw.githubusercontent.com/DEMONXYZE/GRIMMHUB/refs/heads/main/ParkourChampions"))()
+    end,
+
+    [14528787574] = function()
+        print("ParkourStory")
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/DEMONXYZE/GRIMMHUB/refs/heads/main/ParkourChampions"))()
     end
 }
 

@@ -1,23 +1,3 @@
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
-local Window = WindUI:CreateWindow({
-    Title = "GRIMM Hub",
-    Icon = "shield",
-    Author = "by SORNOR",
-    Topbar = {
-        Height = 44,
-        ButtonsType = "Mac",
-    },
-    Transparent = true,
-})
-
--- แจ้งเตือนเมื่อโหลดสำเร็จ
-WindUI:Notify({
-    Title = "GRIMM Hub",
-    Content = "System loaded successfully!",
-    Duration = 3,
-    Icon = "check",
-})
-
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -1981,3 +1961,4 @@ Section3:Button({
 if setclipboard then
     setclipboard(tostring(game.JobId))
 end
+

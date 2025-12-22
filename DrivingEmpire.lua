@@ -26,17 +26,6 @@ local isEscaping = false -- สถานะกำลังหลบหนี
 local lastEscapeTime = 0 -- เวลาล่าสุดที่หลบหนี
 local ShouldStopMovement = false -- Flag to stop all movement
 
-local Window = WindUI:CreateWindow({
-    Title = "GRIMM Hub - Auto Rob      ",
-    Icon = "shield",
-    Author = "by SORNOR",
-    Topbar = {
-        Height = 44,
-        ButtonsType = "Mac",
-    },
-    Transparent = true,
-})
-
 -- Create Tabs
 local Tab = Window:Tab({
     Title = "Auto Rob",

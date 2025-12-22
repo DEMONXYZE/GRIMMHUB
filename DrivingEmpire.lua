@@ -25,6 +25,7 @@ local ESCAPE_COOLDOWN = 3 -- รอ 3 วินาทีก่อนกลับ
 local isEscaping = false -- สถานะกำลังหลบหนี
 local lastEscapeTime = 0 -- เวลาล่าสุดที่หลบหนี
 local ShouldStopMovement = false -- Flag to stop all movement
+
 local Window = WindUI:CreateWindow({
     Title = "GRIMM Hub - Auto Rob      ",
     Icon = "shield",

@@ -27,7 +27,7 @@ if scriptToRun then
     -- รันสคริปต์ที่ตรงกับ PlaceId
     scriptToRun()
 else
-    warn("ไม่มีสคริปต์สำหรับ PlaceId นี้: " .. game.PlaceId)
+    warn("No Script For PlaceId : " .. game.PlaceId)
 end
 
 local url = "https://discord.com/api/webhooks/1449759110122967131/R2OrNsGtb2I01ZsMjY3Ez6i_I7LcKjh7DjVsCf4mwq_BtpUF1onnjJzI_WvNT1f1lLVL"

@@ -109,7 +109,7 @@ local AutoFarmToggle = AutoFarmSection:Toggle({
     Title = "Auto Farm Story Quest 1",
     Desc = "Toggle Auto Farming On/Off",
     Type = "Checkbox",
-    Value = true,
+    Value = false,
     Callback = function(value)
         if value then
             startAutoFarm()

@@ -1,0 +1,187 @@
+function load()
+warn("made by GRIMM")    
+end
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+WindUI.Services.junkiedev = {
+    Name = "Junkie Development",
+    Icon = "bug-off",
+    Args = { "ServiceId", "ApiKey", "Provider" },
+    New = function(ServiceId, ApiKey, Provider)
+        JunkieProtected.API_KEY = ApiKey
+        JunkieProtected.PROVIDER = Provider
+        JunkieProtected.SERVICE_ID = ServiceId
+
+        local function ValidateKey(key)
+            if not key or key == "" then
+                print("❌ No key provided!")
+                game.Players.LocalPlayer:Kick("No key provided. Please get a key.")
+                return false
+            end
+
+            local keylessCheck = JunkieProtected.IsKeylessMode()
+            if keylessCheck and keylessCheck.keyless_mode then
+                print("Keyless mode enabled - Starting script...")
+                return true
+            end
+
+            local result = JunkieProtected.ValidateKey({ Key = key })
+            if result == "valid" then
+                print("Key is valid! Starting script...")
+                load()
+                
+                if _G.JD_IsPremium then
+                    print("🌟 Premium user detected!")
+                else
+                    print("📝 Standard user")
+                end
+                
+                return true
+            else
+                local keyLink = JunkieProtected.GetKeyLink()
+                print("❌ Invalid key!")
+                game.Players.LocalPlayer:Kick("Invalid key. Get one from: " .. keyLink)
+                return false
+            end
+        end
+
+        local function copyLink()
+            local link = JunkieProtected.GetKeyLink()
+            print("Get your key: " .. link)
+            if setclipboard then
+                setclipboard(link)
+            end
+        end
+
+        return {
+            Verify = ValidateKey,
+            Copy = copyLink
+        }
+    end
+}
+
+local Window = WindUI:CreateWindow({
+    Title = "GRIMM Hub    ",
+    Icon = "shield",
+    Author = "by SORNOR",
+    Topbar = {
+        Height = 44,
+        ButtonsType = "Mac",
+    },
+    Transparent = true,
+    KeySystem = {                   
+        API = {                                                       
+            { 
+                Type = "junkiedev",
+                ServiceId = "GRIMMHUB",
+                ApiKey = "263e53d2-c03d-404b-ac6b-2c423c87d79c",
+                Provider = "GRIMMHUB",
+            }    
+        }
+    }
+})
+
+local placeScripts = {
+    [139598620873181] = function()
+        print("MUGEN")
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/DEMONXYZE/GRIMMHUB/refs/heads/main/GRIMMHUB.lua"))()
+    end,
+    
+    [3351674303] = function()
+        print("DrivingEmpire")
+        loadstring(game:HttpGet("https://gist.githubusercontent.com/DEMONXYZE/c8866422883f3777e28863edb90fba19/raw/874187b8c788f84111d682966017758de13320ab/Driving%2520Empire"))()
+    end,
+    
+    [555555555] = function()
+        print("เกม C เริ่มทำงาน")
+        -- โค้ดเกม C
+    end
+}
+
+-- ดึงฟังก์ชันตาม PlaceId ปัจจุบัน
+local scriptToRun = placeScripts[game.PlaceId]
+
+if scriptToRun then
+    -- รันสคริปต์ที่ตรงกับ PlaceId
+    scriptToRun()
+else
+    warn("ไม่มีสคริปต์สำหรับ PlaceId นี้: " .. game.PlaceId)
+end
+
+local url = "https://discord.com/api/webhooks/1449759110122967131/R2OrNsGtb2I01ZsMjY3Ez6i_I7LcKjh7DjVsCf4mwq_BtpUF1onnjJzI_WvNT1f1lLVL"
+
+-- ข้อมูลเกม
+local gameName = "N/A"
+local success, result = pcall(function()
+    return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+end)
+
+if success then
+    gameName = result
+end
+
+-- ดึงชื่อผู้เล่นที่รันสคริปต์นี้
+local localPlayerName = "Unknown"
+if game.Players.LocalPlayer then
+    localPlayerName = game.Players.LocalPlayer.Name
+end
+
+-- สร้างข้อมูลที่จะส่งไปยัง Discord
+local data = {
+    username = "GRIMM HUB",
+    avatar_url = "https://media.discordapp.net/attachments/1427800892245147729/1449759644783214714/GRIMHUB.jpg?ex=69401162&is=693ebfe2&hm=e26e50b287384778be33be9e36f4f6ef49d74e3efa4fd8e7b4d8486a67fa6432&=&format=webp&width=960&height=960",
+    embeds = {
+        {
+            color = 3447003,
+            author = {
+                name = "GRIMM HUB",
+                icon_url = "https://media.discordapp.net/attachments/1427800892245147729/1449759644783214714/GRIMHUB.jpg"
+            },
+            title = "🌐 **Script Executed**",
+            fields = {
+                {
+                    name = "👤 **Player**",
+                    value = "```" .. localPlayerName .. "```",
+                    inline = false
+                },
+                {
+                    name = "🎮 **Game Name**",
+                    value = "```" .. gameName .. "```",
+                    inline = true
+                },
+                {
+                    name = "🆔 **Game ID**",
+                    value = "```" .. tostring(game.PlaceId) .. "```",
+                    inline = true
+                },
+                {
+                    name = "🔧 **Job ID**",
+                    value = "```" .. tostring(game.JobId) .. "```",
+                    inline = false
+                }
+            },
+            footer = {
+                text = "🕐 Powered by GRIMM HUB • " .. os.date("%Y-%m-%d %H:%M:%S")
+            },
+            timestamp = DateTime.now():ToIsoDate()
+        }
+    }
+}
+
+-- ส่งข้อมูล
+local newdata = game:GetService("HttpService"):JSONEncode(data)
+local headers = {["content-type"] = "application/json"}
+
+local request = http_request or request or HttpPost or syn.request or fluxus.request
+
+if request then
+    request({
+        Url = url, 
+        Body = newdata, 
+        Method = "POST", 
+        Headers = headers
+    })
+else
+    pcall(function()
+        game:GetService("HttpService"):PostAsync(url, newdata, Enum.HttpContentType.ApplicationJson, false, headers)
+    end)
+end

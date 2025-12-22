@@ -6,7 +6,7 @@ local placeScripts = {
     
     [3351674303] = function()
         print("DrivingEmpire")
-        loadstring(game:HttpGet("https://gist.githubusercontent.com/DEMONXYZE/c8866422883f3777e28863edb90fba19/raw/874187b8c788f84111d682966017758de13320ab/Driving%2520Empire"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/DEMONXYZE/GRIMMHUB/refs/heads/main/DrivingEmpire"))()
     end,
     
     [555555555] = function()

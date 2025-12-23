@@ -105,7 +105,112 @@ game:GetService("Players").PlayerRemoving:Connect(function()
     PlayerDropdown:SetValues(GetPlayerList())
 end)
 
-print("Auto Heal System Loaded - Select players and toggle ON")
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+
+local Players             = game:GetService("Players")
+local RunService          = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local LP        = Players.LocalPlayer
+local PG        = LP:WaitForChild("PlayerGui")
+local CheckGui  = PG:WaitForChild("SkillCheckPromptGui")
+local Check     = CheckGui:WaitForChild("Check")
+local Line      = Check:WaitForChild("Line")
+local Goal      = Check:WaitForChild("Goal")
+
+local HeartbeatConn = nil
+local AutoSkillCheckEnabled = false -- ตัวแปรเก็บสถานะ Toggle
+
+-- ฟังก์ชันกด Space
+local function PressSpace()
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+    task.wait(0.01)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+end
+
+-- ตรวจสอบว่า Line อยู่ใน Goal หรือไม่
+local function LineInGoal()
+    local lr = Line.Rotation % 360
+    local gr = Goal.Rotation % 360
+    local gs = (gr + 104) % 360
+    local ge = (gr + 114) % 360
+
+    if gs > ge then
+        return lr >= gs or lr <= ge
+    else
+        return lr >= gs and lr <= ge
+    end
+end
+
+-- ฟังก์ชันตรวจสอบหลัก
+local function HeartbeatCheck()
+    if not AutoSkillCheckEnabled then return end
+    if LP.Team and LP.Team.Name == "Survivors" then
+        if LineInGoal() then
+            PressSpace()
+            if HeartbeatConn then
+                HeartbeatConn:Disconnect()
+                HeartbeatConn = nil
+            end
+        end
+    elseif HeartbeatConn then
+        HeartbeatConn:Disconnect()
+        HeartbeatConn = nil
+    end
+end
+
+-- เมื่อ Check ปรากฏหรือหายไป
+local function OnCheckVisible()
+    if not AutoSkillCheckEnabled then return end
+    if LP.Team and LP.Team.Name == "Survivors" then
+        if Check.Visible then
+            if HeartbeatConn then HeartbeatConn:Disconnect() end
+            HeartbeatConn = RunService.Heartbeat:Connect(HeartbeatCheck)
+        elseif HeartbeatConn then
+            HeartbeatConn:Disconnect()
+            HeartbeatConn = nil
+        end
+    elseif HeartbeatConn then
+        HeartbeatConn:Disconnect()
+        HeartbeatConn = nil
+    end
+end
+
+-- เริ่มต้นเชื่อมต่อ Signal
+Check:GetPropertyChangedSignal("Visible"):Connect(OnCheckVisible)
+
+-- ฟังก์ชันเปิด/ปิด Auto Skill Check
+local function ToggleAutoSkillCheck(state)
+    AutoSkillCheckEnabled = state
+    
+    if not AutoSkillCheckEnabled and HeartbeatConn then
+        HeartbeatConn:Disconnect()
+        HeartbeatConn = nil
+    end
+    
+    print("Auto Skill Check: " .. (AutoSkillCheckEnabled and "Enabled" or "Disabled"))
+end
+
+-- สร้าง UI สำหรับ Toggle (ตามตัวอย่างที่คุณให้มา)
+-- หมายเหตุ: คุณต้องมีไลบรารี่ UI ที่เหมาะสมก่อน
+local Tab = Window:Tab({
+    Title = "Auto Skill Check",
+    Icon = "target", -- หรือไอคอนอื่นที่ต้องการ
+    Locked = false,
+})
+
+local Toggle = Tab:Toggle({
+    Title = "Auto Skill Check",
+    Desc = "ออโต้กด Space เมื่อ Skill Check ปรากฏ",
+    Icon = "target",
+    Type = "Checkbox",
+    Value = false, -- ค่าเริ่มต้นเป็นปิด
+    Callback = function(state) 
+        ToggleAutoSkillCheck(state)
+    end
+})
 
 -- Settings Tab (keep your existing settings code)
 local SettingsTab = Window:Tab({

@@ -1,15 +1,3 @@
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
-local Window = WindUI:CreateWindow({
-    Title = "GRIMM Hub    ",
-    Icon = "shield",
-    Author = "by SORNOR",
-    Topbar = {
-        Height = 44,
-        ButtonsType = "Mac",
-    },
-    Transparent = true,
-})
-
 -- สร้าง Tab
 local Tab = Window:Tab({
     Title = "Auto Heal",

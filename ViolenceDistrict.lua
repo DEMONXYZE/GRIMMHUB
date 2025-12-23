@@ -201,8 +201,6 @@ local function ToggleAutoSkillCheck(state)
     print("Auto Skill Check: " .. (AutoSkillCheckEnabled and "Enabled" or "Disabled"))
 end
 
--- สร้าง UI สำหรับ Toggle (ตามตัวอย่างที่คุณให้มา)
--- หมายเหตุ: คุณต้องมีไลบรารี่ UI ที่เหมาะสมก่อน
 local Tab = Window:Tab({
     Title = "Auto Skill Check",
     Icon = "target", -- หรือไอคอนอื่นที่ต้องการ
@@ -220,6 +218,461 @@ local Toggle = Tab:Toggle({
     end
 })
 
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+local Hook = {
+    Players = {
+        ["Killer"] = {Color = Color3.fromRGB(255, 93, 108), On = true},
+        ["Survivor"] = {Color = Color3.fromRGB(64, 224, 255), On = true}
+    },
+    Objects = {
+        ["Generator"] = {Color = Color3.fromRGB(210, 87, 255), On = true},
+        ["Gate"] = {Color = Color3.fromRGB(255, 255, 255), On = true},
+        ["Pallet"] = {Color = Color3.fromRGB(74, 255, 181), On = true},
+        ["Window"] = {Color = Color3.fromRGB(74, 255, 181), On = true},
+        ["Hook"] = {Color = Color3.fromRGB(132, 255, 169), On = true}
+    }
+}
+
+-- ตัวแปรควบคุมการแสดง ESP ทั้งหมด
+local ESPEnabled = {
+    Players = true,
+    Objects = true
+}
+
+local folder = {
+    ["Generator"] = workspace.Map,
+    ["Gate"] = workspace.Map,
+    ["Pallet"] = workspace.Map,
+    ["Window"] = workspace,
+    ["Hook"] = workspace.Map
+}
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local localPlayer = Players.LocalPlayer
+local cache = {}
+local espConnections = {}
+
+-- ฟังก์ชันล้าง ESP ทั้งหมด
+local function clearAllESP()
+    -- ล้าง ESP ผู้เล่น
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character then
+            for _, obj in ipairs(player.Character:GetDescendants()) do
+                if obj.Name == "H" then
+                    obj:Destroy()
+                end
+                local nametag = obj:FindFirstChild("BitchHook")
+                if nametag then
+                    nametag:Destroy()
+                end
+            end
+        end
+    end
+    
+    -- ล้าง ESP วัตถุ
+    for _, f in pairs(folder) do
+        if f then
+            for _, obj in ipairs(f:GetDescendants()) do
+                if obj.Name == "H" then
+                    obj:Destroy()
+                end
+                local nametag = obj:FindFirstChild("BitchHook")
+                if nametag then
+                    nametag:Destroy()
+                end
+            end
+        end
+    end
+end
+
+-- ฟังก์ชันล้าง ESP เฉพาะผู้เล่น
+local function clearPlayerESP()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character then
+            for _, obj in ipairs(player.Character:GetDescendants()) do
+                if obj.Name == "H" then
+                    obj:Destroy()
+                end
+                local nametag = obj:FindFirstChild("BitchHook")
+                if nametag then
+                    nametag:Destroy()
+                end
+            end
+        end
+    end
+end
+
+-- ฟังก์ชันล้าง ESP เฉพาะวัตถุ
+local function clearObjectESP()
+    for _, f in pairs(folder) do
+        if f then
+            for _, obj in ipairs(f:GetDescendants()) do
+                if obj.Name == "H" then
+                    obj:Destroy()
+                end
+                local nametag = obj:FindFirstChild("BitchHook")
+                if nametag then
+                    nametag:Destroy()
+                end
+            end
+        end
+    end
+end
+
+local function ESP(obj, color)
+    if not obj or not color then return end
+    if obj:FindFirstChild("H") then return end
+    local h = Instance.new("Highlight")
+    h.Name = "H"
+    h.Adornee = obj
+    h.FillColor = color
+    h.OutlineColor = color
+    h.FillTransparency = 0.8
+    h.OutlineTransparency = 0.3
+    h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    h.Parent = obj
+end
+
+local function createBillboard(text, color)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "BitchHook"
+    billboard.AlwaysOnTop = true
+    billboard.Size = UDim2.new(0, 120, 0, 30)
+    billboard.StudsOffset = Vector3.new(0, 2, 0)
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Name = "BitchHook"
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = text
+    textLabel.TextColor3 = color
+    textLabel.TextStrokeTransparency = 0
+    textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextSize = 10
+    textLabel.TextWrapped = true
+    textLabel.Parent = billboard
+    
+    return billboard
+end
+
+local function getPlayerRole(player)
+    if player.Team then
+        local teamName = player.Team.Name:lower()
+        if teamName:find("killer") then
+            return "Killer"
+        elseif teamName:find("survivor") then
+            return "Survivor"
+        end
+    end
+    return "Survivor"
+end
+
+local function updatePlayerNametag(player)
+    if not ESPEnabled.Players then return end
+    if not player.Character then return end
+    local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+    
+    local cacheKey = player.Name .. "_nametag"
+    local currentTime = tick()
+    
+    if cache[cacheKey] and currentTime - cache[cacheKey] < 0.1 then
+        return
+    end
+    cache[cacheKey] = currentTime
+    
+    local existingTag = humanoidRootPart:FindFirstChild("BitchHook")
+    if existingTag then existingTag:Destroy() end
+    
+    local role = getPlayerRole(player)
+    local config = Hook.Players[role]
+    if not config or not config.On then return end
+    
+    local color = config.Color
+    
+    local distance = 0
+    if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        distance = math.floor((humanoidRootPart.Position - localPlayer.Character.HumanoidRootPart.Position).Magnitude)
+    end
+    
+    local nametagText = player.Name .. "\n[" .. distance .. " studs]"
+    local nametag = createBillboard(nametagText, color)
+    nametag.Adornee = humanoidRootPart
+    nametag.Parent = humanoidRootPart
+end
+
+local function updatePlayerESP(player)
+    if not ESPEnabled.Players then return end
+    if not player.Character then return end
+    
+    local role = getPlayerRole(player)
+    local config = Hook.Players[role]
+    if not config or not config.On then return end
+    
+    ESP(player.Character, config.Color)
+end
+
+local function updateObjectsESP()
+    if not ESPEnabled.Objects then return end
+    
+    for t, f in pairs(folder) do
+        if not f then continue end
+        local config = Hook.Objects[t]
+        if not config or not config.On then continue end
+        
+        for _, obj in ipairs(f:GetDescendants()) do
+            if t == "Hook" and obj.Name == "Hook" then
+                if obj:FindFirstChild("Model") then
+                    for _, part in ipairs(obj.Model:GetDescendants()) do
+                        if part:IsA("MeshPart") then
+                            ESP(part, config.Color)
+                        end
+                    end
+                end
+                if obj:FindFirstChild("Cartoony Blood Puddle") then
+                    ESP(obj["Cartoony Blood Puddle"], config.Color)
+                end
+            elseif obj.Name == (t == "Pallet" and "Palletwrong" or t) then
+                ESP(obj, config.Color)
+            end
+        end
+    end
+end
+
+-- ฟังก์ชันเริ่มต้น ESP ทั้งระบบ
+local function initializeESP()
+    -- ล้าง ESP เก่าทั้งหมด
+    clearAllESP()
+    
+    -- เริ่ม ESP ผู้เล่น
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer then
+            updatePlayerESP(player)
+            updatePlayerNametag(player)
+            
+            -- เชื่อมต่ออีเวนต์เมื่อผู้เล่นสปอวน์ใหม่
+            player.CharacterAdded:Connect(function()
+                task.wait(0.5)
+                updatePlayerESP(player)
+                updatePlayerNametag(player)
+            end)
+        end
+    end
+    
+    -- เริ่ม ESP วัตถุ
+    updateObjectsESP()
+end
+
+-- Heartbeat สำหรับอัพเดตข้อมูลแบบ real-time
+local lastUpdate = 0
+local heartbeatConnection = RunService.Heartbeat:Connect(function()
+    local currentTime = tick()
+    if currentTime - lastUpdate < 0.1 then return end
+    lastUpdate = currentTime
+    
+    if ESPEnabled.Players then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= localPlayer then
+                updatePlayerNametag(player)
+            end
+        end
+    end
+end)
+
+-- เก็บการเชื่อมต่อ
+espConnections.heartbeat = heartbeatConnection
+
+-- ฟังก์ชันเปิด-ปิด ESP ผู้เล่น
+local function togglePlayerESP(enabled)
+    ESPEnabled.Players = enabled
+    if not enabled then
+        clearPlayerESP()
+    else
+        -- สร้าง ESP ผู้เล่นใหม่
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= localPlayer then
+                updatePlayerESP(player)
+                updatePlayerNametag(player)
+            end
+        end
+    end
+end
+
+-- ฟังก์ชันเปิด-ปิด ESP วัตถุ
+local function toggleObjectESP(enabled)
+    ESPEnabled.Objects = enabled
+    if not enabled then
+        clearObjectESP()
+    else
+        updateObjectsESP()
+    end
+end
+
+-- ฟังก์ชันเปิด-ปิด ESP ทั้งหมด
+local function toggleAllESP(enabled)
+    ESPEnabled.Players = enabled
+    ESPEnabled.Objects = enabled
+    
+    if not enabled then
+        clearAllESP()
+    else
+        initializeESP()
+    end
+end
+
+-- เริ่มต้น ESP ครั้งแรก
+initializeESP()
+
+-- สร้าง UI Toggles
+local Tab = Window:Tab({
+    Title = "ESP",
+    Icon = "target",
+    Locked = false,
+})
+
+-- Toggle สำหรับ ESP ทั้งหมด
+local ToggleAll = Tab:Toggle({
+    Title = "ESP ทั้งหมด",
+    Desc = "เปิด/ปิด ESP ทั้งหมด",
+    Icon = "eye",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(state) 
+        toggleAllESP(state)
+    end
+})
+
+-- Toggle สำหรับ ESP ผู้เล่น
+local TogglePlayers = Tab:Toggle({
+    Title = "ESP ผู้เล่น",
+    Desc = "แสดง ESP สำหรับผู้เล่น",
+    Icon = "users",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(state) 
+        togglePlayerESP(state)
+    end
+})
+
+-- Toggle สำหรับ ESP วัตถุ (อันที่คุณต้องการ)
+local ToggleObjects = Tab:Toggle({
+    Title = "ESP วัตถุ",
+    Desc = "แสดง ESP สำหรับวัตถุในเกม",
+    Icon = "target",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(state) 
+        toggleObjectESP(state)
+    end
+})
+
+-- Toggle สำหรับแต่ละประเภทวัตถุ
+local ToggleGenerator = Tab:Toggle({
+    Title = "เครื่องปั่นไฟ",
+    Desc = "แสดง ESP สำหรับเครื่องปั่นไฟ",
+    Icon = "zap",
+    Type = "Checkbox",
+    Value = Hook.Objects.Generator.On,
+    Callback = function(state) 
+        Hook.Objects.Generator.On = state
+        if ESPEnabled.Objects then
+            clearObjectESP()
+            updateObjectsESP()
+        end
+    end
+})
+
+local ToggleGate = Tab:Toggle({
+    Title = "ประตู",
+    Desc = "แสดง ESP สำหรับประตู",
+    Icon = "door-open",
+    Type = "Checkbox",
+    Value = Hook.Objects.Gate.On,
+    Callback = function(state) 
+        Hook.Objects.Gate.On = state
+        if ESPEnabled.Objects then
+            clearObjectESP()
+            updateObjectsESP()
+        end
+    end
+})
+
+local TogglePallet = Tab:Toggle({
+    Title = "พาเลท",
+    Desc = "แสดง ESP สำหรับพาเลท",
+    Icon = "box",
+    Type = "Checkbox",
+    Value = Hook.Objects.Pallet.On,
+    Callback = function(state) 
+        Hook.Objects.Pallet.On = state
+        if ESPEnabled.Objects then
+            clearObjectESP()
+            updateObjectsESP()
+        end
+    end
+})
+
+local ToggleWindow = Tab:Toggle({
+    Title = "หน้าต่าง",
+    Desc = "แสดง ESP สำหรับหน้าต่าง",
+    Icon = "layout",
+    Type = "Checkbox",
+    Value = Hook.Objects.Window.On,
+    Callback = function(state) 
+        Hook.Objects.Window.On = state
+        if ESPEnabled.Objects then
+            clearObjectESP()
+            updateObjectsESP()
+        end
+    end
+})
+
+local ToggleHook = Tab:Toggle({
+    Title = "ตะขอ",
+    Desc = "แสดง ESP สำหรับตะขอ",
+    Icon = "anchor",
+    Type = "Checkbox",
+    Value = Hook.Objects.Hook.On,
+    Callback = function(state) 
+        Hook.Objects.Hook.On = state
+        if ESPEnabled.Objects then
+            clearObjectESP()
+            updateObjectsESP()
+        end
+    end
+})
+
+-- ฟังก์ชันทำความสะอาดเมื่อสคริปต์ถูกปิด
+local function cleanup()
+    for _, connection in pairs(espConnections) do
+        if connection then
+            connection:Disconnect()
+        end
+    end
+    clearAllESP()
+end
+
+-- เชื่อมต่ออีเวนต์เมื่อผู้เล่นใหม่เข้าร่วม
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        if ESPEnabled.Players then
+            updatePlayerESP(player)
+            updatePlayerNametag(player)
+        end
+    end)
+end)
+
+-- ทำความสะอาดเมื่อเกมจบ
+game:GetService("Players").PlayerRemoving:Connect(function(player)
+    if player == localPlayer then
+        cleanup()
+    end
+end)
 -- Settings Tab (keep your existing settings code)
 local SettingsTab = Window:Tab({
     Title = "Settings",

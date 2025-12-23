@@ -2,7 +2,7 @@
 local Tab = Window:Tab({
     Title = "Auto Heal",
     Icon = "heart",
-    Locked = false,
+    Locked = true,
 })
 
 -- ตัวแปรเก็บสถานะ

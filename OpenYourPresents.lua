@@ -154,6 +154,55 @@ local SettingsSection = SettingsTab:Section({
     Title = "Button Display Settings",
 })
 
+-- ==================== ANTI-AFK SETTING ====================
+-- ตัวแปรสำหรับ Anti-AFK
+local antiAFKEnabled = false
+local antiAFKConnection = nil
+
+-- ฟังก์ชันเริ่ม Anti-AFK
+local function startAntiAFK()
+    if antiAFKEnabled then return end
+    
+    antiAFKEnabled = true
+    local vu = game:GetService("VirtualUser")
+    
+    -- สร้าง connection สำหรับป้องกัน AFK
+    antiAFKConnection = game:GetService("Players").LocalPlayer.Idled:Connect(function()
+        vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        task.wait(1)
+        vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    end)
+end
+
+-- ฟังก์ชันหยุด Anti-AFK
+local function stopAntiAFK()
+    if not antiAFKEnabled then return end
+    
+    antiAFKEnabled = false
+    
+    -- ตัดการเชื่อมต่อ
+    if antiAFKConnection then
+        antiAFKConnection:Disconnect()
+        antiAFKConnection = nil
+    end
+end
+
+-- เพิ่ม Toggle Anti-AFK ใน Settings Section
+SettingsSection:Toggle({
+    Title = "Anti-AFK",
+    Desc = "Prevent being kicked for inactivity",
+    Icon = "user-check",
+    Type = "Checkbox",
+    Value = true,
+    Callback = function(state) 
+        if state then
+            startAntiAFK()
+        else
+            stopAntiAFK()
+        end
+    end
+})
+
 local showFPS = true
 local showTime = true
 local showPing = true

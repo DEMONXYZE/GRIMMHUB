@@ -134,7 +134,7 @@ end
 
 -- Create Toggle
 local Toggle = Tab:Toggle({
-    Title = "Auto Crate (OFF)",
+    Title = "Auto Crate",
     Desc = "Automatically interact with crates in your base",
     Icon = "crate",
     Type = "Checkbox",

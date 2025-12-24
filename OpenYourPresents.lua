@@ -229,7 +229,7 @@ end
 -- Create Server Crate Toggle
 local ServerCrateToggle = Tab:Toggle({
     Title = "Server Crate",
-    Desc = "Auto-hit server crates every 5 seconds",
+    Desc = "Auto-hit server crates",
     Icon = "server",
     Type = "Checkbox",
     Value = false,

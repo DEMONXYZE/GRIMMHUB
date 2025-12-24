@@ -73,10 +73,10 @@ local function startAutoFarm()
             task.wait(2)
             
             -- เคลื่อนที่ไปยังจุดต่างๆ
-            tweenToPosition(CFrame.new(-2329.982177734375, 4157.14306640625, -4670.42041015625), 2)
-            tweenToPosition(CFrame.new(-3161.441162109375, 3761.62744140625, -4231.6005859375), 2)
-            tweenToPosition(CFrame.new(-4374.36669921875, 3648.06494140625, -5956.15234375), 3)
-            task.wait(2)
+            tweenToPosition(CFrame.new(-2329.982177734375, 4157.14306640625, -4670.42041015625), 7)
+            tweenToPosition(CFrame.new(-3161.441162109375, 3761.62744140625, -4231.6005859375), 5)
+            tweenToPosition(CFrame.new(-4374.36669921875, 3648.06494140625, -5956.15234375), 5)
+            task.wait(5)
             
             tweenToPosition(CFrame.new(-2866.304443359375, 3697.771240234375, -5395.833984375), 2)
             task.wait(1)

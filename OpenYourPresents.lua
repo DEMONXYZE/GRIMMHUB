@@ -5,6 +5,12 @@ Window:Tag({
     Radius = 13,
 })
 
+local Tab = Window:Tab({
+    Title = "Auto Crate",
+    Icon = "crate", -- optional
+    Locked = false,
+})
+
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local basesFolder = workspace.Map.Bases
@@ -92,13 +98,20 @@ local function toggleLoop(state)
         if firedCount and firedCount > 0 then
             WindUI:Notify({
                 Title = "Success",
-                Content = "Started working (found " .. firedCount .. " crates)",
+                Content = "Auto Crate started (found " .. firedCount .. " crates)",
                 Duration = 3,
                 Icon = "check",
             })
+        else
+            WindUI:Notify({
+                Title = "Warning",
+                Content = "Auto Crate started but no crates found",
+                Duration = 3,
+                Icon = "warning",
+            })
         end
         
-        -- Set up loop running every 0.5 seconds
+        -- Set up loop
         connection = game:GetService("RunService").Heartbeat:Connect(function()
             if isRunning then
                 fireCrateRemote()
@@ -107,23 +120,23 @@ local function toggleLoop(state)
             end
         end)
         
-        Toggle:SetTitle("Toggle (Running)")
+        Toggle:SetTitle("Auto Crate (ON)")
     else
         WindUI:Notify({
             Title = "Stopped",
-            Content = "Stopped working",
+            Content = "Auto Crate stopped",
             Duration = 3,
             Icon = "stop",
         })
-        Toggle:SetTitle("Toggle")
+        Toggle:SetTitle("Auto Crate (OFF)")
     end
 end
 
 -- Create Toggle
 local Toggle = Tab:Toggle({
-    Title = "Toggle",
-    Desc = "Turn on/off automatic operation",
-    Icon = "bird",
+    Title = "Auto Crate (OFF)",
+    Desc = "Automatically interact with crates in your base",
+    Icon = "crate",
     Type = "Checkbox",
     Value = false,
     Callback = function(state) 

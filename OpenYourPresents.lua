@@ -148,7 +148,7 @@ local Toggle = Tab:Toggle({
 local isServerCrateRunning = false
 local serverCrateConnection = nil
 local lastCheckTime = 0
-local CHECK_INTERVAL = 5 -- seconds
+local CHECK_INTERVAL = 0.5 -- seconds
 
 -- Function for server crates
 local function checkAndHitServerCrates()

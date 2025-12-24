@@ -71,7 +71,7 @@ local function fireCrateRemote()
             if insideCrate then
                 local hitRemote = insideCrate:FindFirstChild("Hit")
                 if hitRemote and hitRemote:IsA("RemoteEvent") then
-                    local args = {1}
+                    local args = {4000}
                     hitRemote:FireServer(unpack(args))
                     firedCount += 1
                 end

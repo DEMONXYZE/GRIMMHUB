@@ -144,6 +144,107 @@ local Toggle = Tab:Toggle({
     end
 })
 
+local Tab = Window:Tab({
+    Title = "Auto Crate",
+    Icon = "gift",
+    Locked = false,
+})
+
+-- Auto Server Crate Variables
+local isServerCrateRunning = false
+local serverCrateConnection = nil
+local lastCheckTime = 0
+local CHECK_INTERVAL = 5 -- seconds
+
+-- Function for server crates
+local function checkAndHitServerCrates()
+    local serverCrateFolder = workspace.Map:FindFirstChild("ServerCrate")
+    if not serverCrateFolder then return 0 end
+    
+    local hitCount = 0
+    
+    for _, child in ipairs(serverCrateFolder:GetChildren()) do
+        -- Skip if it's a part named "crate" (case-insensitive)
+        if child:IsA("Part") and child.Name:lower() == "crate" then
+            continue
+        end
+        
+        local insideBigCrate = child:FindFirstChild("InsideBigCrate")
+        if insideBigCrate then
+            local hitRemote = insideBigCrate:FindFirstChild("Hit")
+            if hitRemote and hitRemote:IsA("RemoteEvent") then
+                hitRemote:FireServer(75)
+                hitCount += 1
+            end
+        end
+    end
+    
+    return hitCount
+end
+
+-- Function to start/stop server crate loop
+local function toggleServerCrateLoop(state)
+    isServerCrateRunning = state
+    
+    if serverCrateConnection then
+        serverCrateConnection:Disconnect()
+        serverCrateConnection = nil
+    end
+    
+    if state then
+        -- Run immediately on start
+        local hitCount = checkAndHitServerCrates()
+        
+        if hitCount > 0 then
+            WindUI:Notify({
+                Title = "Server Crate",
+                Content = "Started! Hit " .. hitCount .. " server crate(s)",
+                Duration = 3,
+                Icon = "check",
+            })
+        else
+            WindUI:Notify({
+                Title = "Server Crate",
+                Content = "Started! No server crates found",
+                Duration = 3,
+                Icon = "info",
+            })
+        end
+        
+        -- Set up loop to check every 5 seconds
+        serverCrateConnection = game:GetService("RunService").Heartbeat:Connect(function()
+            local currentTime = tick()
+            if isServerCrateRunning and (currentTime - lastCheckTime) >= CHECK_INTERVAL then
+                lastCheckTime = currentTime
+                checkAndHitServerCrates()
+            end
+        end)
+        
+        ServerCrateToggle:SetTitle("Server Crate (ON)")
+    else
+        WindUI:Notify({
+            Title = "Server Crate",
+            Content = "Stopped",
+            Duration = 3,
+            Icon = "stop",
+        })
+        ServerCrateToggle:SetTitle("Server Crate (OFF)")
+    end
+end
+
+-- Create Server Crate Toggle
+local ServerCrateToggle = Tab:Toggle({
+    Title = "Server Crate",
+    Desc = "Auto-hit server crates every 5 seconds",
+    Icon = "server",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(state) 
+        toggleServerCrateLoop(state)
+    end
+})
+
+
 local SettingsTab = Window:Tab({
     Title = "Settings",
     Icon = "settings",

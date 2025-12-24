@@ -144,12 +144,6 @@ local Toggle = Tab:Toggle({
     end
 })
 
-local Tab = Window:Tab({
-    Title = "Auto Crate",
-    Icon = "gift",
-    Locked = false,
-})
-
 -- Auto Server Crate Variables
 local isServerCrateRunning = false
 local serverCrateConnection = nil

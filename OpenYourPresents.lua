@@ -7,7 +7,7 @@ Window:Tag({
 
 local Tab = Window:Tab({
     Title = "Auto Crate",
-    Icon = "crate", -- optional
+    Icon = "gift", -- optional
     Locked = false,
 })
 
@@ -136,7 +136,7 @@ end
 local Toggle = Tab:Toggle({
     Title = "Auto Crate",
     Desc = "Automatically interact with crates in your base",
-    Icon = "crate",
+    Icon = "gift",
     Type = "Checkbox",
     Value = false,
     Callback = function(state) 

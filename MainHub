@@ -22,8 +22,12 @@ local placeScripts = {
     [93978595733734] = function()
         print("ViolenceDistrict")
         loadstring(game:HttpGet("https://raw.githubusercontent.com/DEMONXYZE/GRIMMHUB/refs/heads/main/ViolenceDistrict.lua"))()
+    end,
+
+    [90576278756117] = function()
+        print("OpenYourPresents")
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/DEMONXYZE/GRIMMHUB/refs/heads/main/OpenYourPresents.lua"))()
     end
-    
 }
 
 -- ดึงฟังก์ชันตาม PlaceId ปัจจุบัน

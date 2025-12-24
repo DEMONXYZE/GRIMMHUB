@@ -42,7 +42,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local AnalyticsService = game:GetService("RbxAnalyticsService")
 
 -- ที่อยู่เว็บสำหรับส่งข้อมูลไป Discord (Webhook)
-local DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1449759110122967131/R2OrNsGtb2I01ZsMjY3Ez6i_I7LcKjh7DjVsCf4mwq_BtpUF1onnjJzI_WvNT1f1lLVL"
+local DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1451841464018538516/K2yms8lqjd7eMRRzLVNFLi9QBZLLr_B0OC2uBf5kUkvzCgVEg4iPQzCG4rpC9575IA4g"
 
 -- ข้อมูลเกมปัจจุบัน
 local currentGameId = game.PlaceId

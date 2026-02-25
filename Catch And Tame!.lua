@@ -42,7 +42,7 @@ local Tab = Window:Tab({
 
 local autoBuyFood = false
 local selectedFoods = {"Farmers Feed", "Enriched Feed", "Hay", "Bone", "Prime Feed", "Steak"}
-local buyAmount = 1
+local buyAmount = 50
 
 -- Dropdown
 Tab:Dropdown({

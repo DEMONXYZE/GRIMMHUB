@@ -1,3 +1,15 @@
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+local Window = WindUI:CreateWindow({
+    Title = "GRIMM Hub    ",
+    Icon = "shield",
+    Author = "by SORNOR",
+    Topbar = {
+        Height = 44,
+        ButtonsType = "Mac",
+    },
+    Transparent = true
+})
+
 local Tab = Window:Tab({
     Title = "Auto Collect",
     Icon = "package",
@@ -148,46 +160,54 @@ local function teleportToPet(pet)
     end
 end
 
--- ฟังก์ชันสแกน
+-- ฟังก์ชันสแกน (รองรับหลายโฟลเดอร์)
+local PET_FOLDERS = {
+    "RoamingPets",
+    "SkyIslandPets", 
+    "IceIslandPets",
+}
+
 local function scanPets()
-    local RoamingPets = workspace:FindFirstChild("RoamingPets")
-    if not RoamingPets then return end
-    local PetsFolder = RoamingPets:FindFirstChild("Pets")
-    if not PetsFolder then return end
+    for _, folderName in ipairs(PET_FOLDERS) do
+        local folder = workspace:FindFirstChild(folderName)
+        if not folder then continue end
+        
+        local PetsFolder = folder:FindFirstChild("Pets")
+        if not PetsFolder then continue end
 
-    for _, pet in ipairs(PetsFolder:GetChildren()) do
-        local rarity   = pet:GetAttribute("Rarity")
-        local sizeName = pet:GetAttribute("SizeName")
-        local petName  = pet:GetAttribute("Name") or pet.Name
+        for _, pet in ipairs(PetsFolder:GetChildren()) do
+            local rarity   = pet:GetAttribute("Rarity")
+            local sizeName = pet:GetAttribute("SizeName")
+            local petName  = pet:GetAttribute("Name") or pet.Name
 
-        local rarityMatch = false
-        local sizeMatch   = false
+            local rarityMatch = false
+            local sizeMatch   = false
 
-        if rarity then
-            for _, sel in ipairs(selectedRarities) do
-                if rarity == sel then rarityMatch = true break end
+            if rarity then
+                for _, sel in ipairs(selectedRarities) do
+                    if rarity == sel then rarityMatch = true break end
+                end
             end
-        end
 
-        if sizeName then
-            for _, sel in ipairs(selectedSizes) do
-                if sizeName == sel then sizeMatch = true break end
+            if sizeName then
+                for _, sel in ipairs(selectedSizes) do
+                    if sizeName == sel then sizeMatch = true break end
+                end
             end
-        end
 
-        if rarityMatch and sizeMatch then
-            print(string.format("✅ [%s][%s] Found: %s — Teleporting!", rarity, sizeName, petName))
+            if rarityMatch and sizeMatch then
+                print(string.format("✅ [%s][%s][%s] Found: %s — Teleporting!", folderName, rarity, sizeName, petName))
 
-            -- Notifier
-            WindUI:Notify({
-                Title = "Pet Found!",
-                Content = string.format("[%s] [%s] %s", rarity, sizeName, petName),
-                Duration = 5,
-                Icon = "paw-print",
-            })
+                WindUI:Notify({
+                    Title = string.format("[%s] %s", rarity, folderName),
+                    Content = string.format("[%s] [%s] %s", rarity, sizeName, petName),
+                    Duration = 5,
+                    Icon = "paw-print",
+                })
 
-            teleportToPet(pet)
-            task.wait(1)
+                teleportToPet(pet)
+                task.wait(1)
+            end
         end
     end
 end
@@ -202,7 +222,7 @@ task.spawn(function()
 end)
 
 Window:Tag({
-    Title = "V.1.0.0",
+    Title = "V.1.0.5",
     Icon = "github",
     Color = Color3.fromHex("1F1F1F"),
     Radius = 13,

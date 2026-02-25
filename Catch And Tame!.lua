@@ -148,6 +148,32 @@ local function teleportToPet(pet)
     end
 end
 
+-- ฟังก์ชันจับสัตว์
+local function catchPet(pet, folder)
+    local petFolder = workspace:WaitForChild(folder):WaitForChild("Pets"):WaitForChild(pet.Name)
+    local char = game.Players.LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+    -- ส่ง minigameRequest
+    local args = {
+        petFolder,
+        hrp and hrp.CFrame or CFrame.new()
+    }
+    pcall(function()
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("minigameRequest"):InvokeServer(unpack(args))
+    end)
+
+    task.wait(0.5)
+
+    -- ส่ง Progress 25 → 70 → 100
+    local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UpdateProgress")
+    pcall(function() remote:FireServer(25) end)
+    task.wait(0.3)
+    pcall(function() remote:FireServer(70.00000000000001) end)
+    task.wait(0.3)
+    pcall(function() remote:FireServer(100) end)
+end
+
 -- ฟังก์ชันสแกน (รองรับหลายโฟลเดอร์)
 local PET_FOLDERS = {
     "RoamingPets",
@@ -184,17 +210,20 @@ local function scanPets()
             end
 
             if rarityMatch and sizeMatch then
-                print(string.format("✅ [%s][%s][%s] Found: %s — Teleporting!", folderName, rarity, sizeName, petName))
+            print(string.format("✅ [%s][%s][%s] Found: %s — Teleporting!", folderName, rarity, sizeName, petName))
 
-                WindUI:Notify({
-                    Title = string.format("[%s] %s", rarity, folderName),
-                    Content = string.format("[%s] [%s] %s", rarity, sizeName, petName),
-                    Duration = 5,
-                    Icon = "paw-print",
-                })
+            WindUI:Notify({
+                Title = string.format("[%s] %s — %s", rarity, petName, folderName),
+                Content = string.format("Size: %s", sizeName),
+                Duration = 5,
+                Icon = "paw-print",
+            })
 
-                teleportToPet(pet)
-                task.wait(1)
+            teleportToPet(pet)
+            task.wait(1) -- รอวาปถึงก่อน
+
+            catchPet(pet, folderName) -- จับเลย
+            task.wait(1)
             end
         end
     end
@@ -210,7 +239,7 @@ task.spawn(function()
 end)
 
 Window:Tag({
-    Title = "V.1.0.5",
+    Title = "V.1.2.5",
     Icon = "github",
     Color = Color3.fromHex("1F1F1F"),
     Radius = 13,

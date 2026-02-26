@@ -138,6 +138,20 @@ PetsTab:Toggle({
     end
 })
 
+-- Toggle MutationMachine UI
+PetsTab:Toggle({
+    Title = "Mutation Machine",
+    Desc = "Toggle Mutation Machine UI",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(s)
+        local Players = game:GetService("Players")
+        local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+        local mutationMachine = playerGui:WaitForChild("MutationMachine")
+        mutationMachine.Enabled = s
+    end
+})
+
 -- ฟังก์ชันวาป
 -- local function teleportToPet(pet)
 --     local char = game.Players.LocalPlayer.Character
@@ -219,6 +233,9 @@ local function scanPets()
                 Icon = "paw-print",
             })
 
+            -- teleportToPet(pet)
+            -- task.wait(1) -- รอวาปถึงก่อน
+
             catchPet(pet, folderName) -- จับเลย
             task.wait(1)
             end
@@ -232,6 +249,57 @@ task.spawn(function()
         if autoPetScan then
             scanPets()
         end
+    end
+end)
+
+-- ==================== AUTO MERCHANT TAB ====================
+local MerchantTab = Window:Tab({
+    Title = "Auto Merchant",
+    Icon = "store",
+    Locked = false,
+})
+
+local autoMerchant = false
+local merchantDelay = 3 -- นาที
+
+MerchantTab:Slider({
+    Title = "Merchant Delay",
+    Desc = "Delay between each round (minutes)",
+    Step = 1,
+    Value = {Min = 1, Max = 5, Default = 3},
+    Callback = function(v)
+        merchantDelay = v
+    end
+})
+
+MerchantTab:Toggle({
+    Title = "Auto Merchant",
+    Desc = "Buy all items",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(s)
+        autoMerchant = s
+    end
+})
+
+local function buyMerchant()
+    local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("BuyMerchant")
+    for slot = 1, 9 do
+        for count = 1, 20 do
+            pcall(function()
+                remote:FireServer(slot)
+            end)
+            task.wait(0.2)
+        end
+    end
+end
+
+task.spawn(function()
+    while true do
+        if autoMerchant then
+            buyMerchant()
+        end
+        task.wait(merchantDelay * 60) -- แปลงนาทีเป็นวินาที
     end
 end)
 
@@ -453,62 +521,56 @@ local Keybind = SettingsTab:Keybind({
 })
 
 WindUI:AddTheme({
-    Name = "Green Theme", -- theme name
+    Name = "Green Theme",
     
-    Accent = Color3.fromHex("#22c55e"), -- เขียวสด
-    Background = Color3.fromHex("#101010"), -- ดำ
+    Accent = Color3.fromHex("#4ade80"),           -- เขียวกลาง
+    Background = Color3.fromHex("#1a2e1a"),        -- เขียวเข้มมาก (แทนดำ)
     BackgroundTransparency = 0,
-    Outline = Color3.fromHex("#FFFFFF"),
-    Text = Color3.fromHex("#FFFFFF"),
-    Placeholder = Color3.fromHex("#7a7a7a"),
-    Button = Color3.fromHex("#22c55e"), -- เขียวสด
-    Icon = Color3.fromHex("#86efac"), -- เขียวอ่อน
+    Outline = Color3.fromHex("#86efac"),
+    Text = Color3.fromHex("#e2f5e2"),              -- ขาวอมเขียวอ่อน
+    Placeholder = Color3.fromHex("#6b9e7a"),
+    Button = Color3.fromHex("#16a34a"),            -- เขียวกลางเข้ม
+    Icon = Color3.fromHex("#86efac"),
     
-    Hover = Color3.fromHex("#FFFFFF"), -- Text
+    Hover = Color3.fromHex("#e2f5e2"),
     
-    WindowBackground = Color3.fromHex("101010"), -- Background
-    WindowShadow = Color3.fromHex("000000"),
+    WindowBackground = Color3.fromHex("#1e3a1e"),  -- เขียวเข้ม
+    WindowShadow = Color3.fromHex("#0f1f0f"),
     
-    DialogBackground = Color3.fromHex("#101010"), -- Background
+    DialogBackground = Color3.fromHex("#1e3a1e"),
     DialogBackgroundTransparency = 0,
-    DialogTitle = Color3.fromHex("#FFFFFF"),
-    DialogContent = Color3.fromHex("#FFFFFF"),
-    DialogIcon = Color3.fromHex("#86efac"), -- เขียวอ่อน
+    DialogTitle = Color3.fromHex("#e2f5e2"),
+    DialogContent = Color3.fromHex("#bbf7d0"),
+    DialogIcon = Color3.fromHex("#86efac"),
     
-    WindowTopbarButtonIcon = Color3.fromHex("86efac"), -- เขียวอ่อน
-    WindowTopbarTitle = Color3.fromHex("FFFFFF"),
-    WindowTopbarAuthor = Color3.fromHex("FFFFFF"),
-    WindowTopbarIcon = Color3.fromHex("FFFFFF"),
+    WindowTopbarButtonIcon = Color3.fromHex("#86efac"),
+    WindowTopbarTitle = Color3.fromHex("#e2f5e2"),
+    WindowTopbarAuthor = Color3.fromHex("#bbf7d0"),
+    WindowTopbarIcon = Color3.fromHex("#86efac"),
     
-    TabBackground = Color3.fromHex("#22c55e"), -- เขียวสด
-    TabTitle = Color3.fromHex("#FFFFFF"),
-    TabIcon = Color3.fromHex("86efac"), -- เขียวอ่อน
+    TabBackground = Color3.fromHex("#166534"),     -- เขียวเข้มกลาง
+    TabTitle = Color3.fromHex("#e2f5e2"),
+    TabIcon = Color3.fromHex("#86efac"),
     
-    ElementBackground = Color3.fromHex("#22c55e"), -- เขียวสด
-    ElementTitle = Color3.fromHex("#FFFFFF"),
-    ElementDesc = Color3.fromHex("#FFFFFF"),
-    ElementIcon = Color3.fromHex("#86efac"), -- เขียวอ่อน
+    ElementBackground = Color3.fromHex("#14532d"), -- เขียวเข้ม
+    ElementTitle = Color3.fromHex("#e2f5e2"),
+    ElementDesc = Color3.fromHex("#bbf7d0"),
+    ElementIcon = Color3.fromHex("#86efac"),
     
-    PopupBackground = Color3.fromHex("#101010"), -- Background
+    PopupBackground = Color3.fromHex("#1e3a1e"),
     PopupBackgroundTransparency = 0,
-    PopupTitle = Color3.fromHex("#FFFFFF"),
-    PopupContent = Color3.fromHex("#FFFFFF"),
-    PopupIcon = Color3.fromHex("#86efac"), -- เขียวอ่อน
+    PopupTitle = Color3.fromHex("#e2f5e2"),
+    PopupContent = Color3.fromHex("#bbf7d0"),
+    PopupIcon = Color3.fromHex("#86efac"),
     
-    DialogBackground = Color3.fromHex("#101010"), -- Background
-    DialogBackgroundTransparency = 0,
-    DialogTitle = Color3.fromHex("#FFFFFF"),
-    DialogContent = Color3.fromHex("#FFFFFF"),
-    DialogIcon = Color3.fromHex("#86efac"), -- เขียวอ่อน
+    Toggle = Color3.fromHex("#16a34a"),
+    ToggleBar = Color3.fromHex("#4ade80"),
     
-    Toggle = Color3.fromHex("#22c55e"), -- เขียวสด
-    ToggleBar = Color3.fromHex("#86efac"), -- เขียวอ่อน
+    Checkbox = Color3.fromHex("#16a34a"),
+    CheckboxIcon = Color3.fromHex("#e2f5e2"),
     
-    Checkbox = Color3.fromHex("#22c55e"), -- เขียวสด
-    CheckboxIcon = Color3.fromHex("#FFFFFF"),
-    
-    Slider = Color3.fromHex("#22c55e"), -- เขียวสด
-    SliderThumb = Color3.fromHex("#86efac"), -- เขียวอ่อน
+    Slider = Color3.fromHex("#16a34a"),
+    SliderThumb = Color3.fromHex("#86efac"),
 })
 
 WindUI:SetTheme("Green Theme")

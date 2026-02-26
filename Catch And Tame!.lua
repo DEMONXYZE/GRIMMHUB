@@ -139,14 +139,14 @@ PetsTab:Toggle({
 })
 
 -- ฟังก์ชันวาป
-local function teleportToPet(pet)
-    local char = game.Players.LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    local petRoot = pet:FindFirstChild("HumanoidRootPart") or pet:FindFirstChild("Root")
-    if hrp and petRoot then
-        hrp.CFrame = petRoot.CFrame + Vector3.new(0, 5, 0)
-    end
-end
+-- local function teleportToPet(pet)
+--     local char = game.Players.LocalPlayer.Character
+--     local hrp = char and char:FindFirstChild("HumanoidRootPart")
+--     local petRoot = pet:FindFirstChild("HumanoidRootPart") or pet:FindFirstChild("Root")
+--     if hrp and petRoot then
+--         hrp.CFrame = petRoot.CFrame + Vector3.new(0, 5, 0)
+--     end
+-- end
 
 -- ฟังก์ชันจับสัตว์
 local function catchPet(pet, folder)
@@ -219,9 +219,6 @@ local function scanPets()
                 Icon = "paw-print",
             })
 
-            teleportToPet(pet)
-            task.wait(1) -- รอวาปถึงก่อน
-
             catchPet(pet, folderName) -- จับเลย
             task.wait(1)
             end
@@ -239,7 +236,7 @@ task.spawn(function()
 end)
 
 Window:Tag({
-    Title = "V.1.2.5",
+    Title = "V.1.3.5",
     Icon = "github",
     Color = Color3.fromHex("1F1F1F"),
     Radius = 13,

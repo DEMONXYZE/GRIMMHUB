@@ -303,8 +303,105 @@ task.spawn(function()
     end
 end)
 
+-- ==================== BREEDING TAB ====================
+local BreedingTab = Window:Tab({
+    Title = "Breeding",
+    Icon = "heart",
+    Locked = false,
+})
+
+local petList = {}      -- { name = "Dragon", guid = "xxx-xxx" }
+local petLabels = {}    -- { "Dragon (Mythical/Huge)", ... }
+local selectedPet1 = nil
+local selectedPet2 = nil
+
+-- ฟังก์ชันโหลด pet จาก pen เรา
+local function loadMyPets()
+    petList = {}
+    petLabels = {}
+
+    local PlayerPens = workspace:WaitForChild("PlayerPens")
+    for _, pen in ipairs(PlayerPens:GetChildren()) do
+        local sign = pen:FindFirstChild("Sign")
+        local guiPart = sign and sign:FindFirstChild("GuiPart")
+        local otherSign = guiPart and guiPart:FindFirstChild("OtherPlayersSign")
+        local holder = otherSign and otherSign:FindFirstChild("Holder")
+        local playerHolder = holder and holder:FindFirstChild("PlayerHolder")
+        local playerName = playerHolder and playerHolder:FindFirstChild("PlayerName")
+        local nameText = playerName and playerName:FindFirstChild("NameText")
+        local ownerName = nameText and nameText.Text or ""
+
+        if ownerName == "" then
+            local PetsFolder = pen:FindFirstChild("Pets")
+            if PetsFolder then
+                for _, pet in ipairs(PetsFolder:GetChildren()) do
+                    local name     = pet:GetAttribute("Name")     or pet.Name
+                    local rarity   = pet:GetAttribute("Rarity")   or "?"
+                    local sizeName = pet:GetAttribute("SizeName") or "?"
+                    local mutation = pet:GetAttribute("Mutation") or "None"
+                    local guid     = pet:GetAttribute("Guid")     or pet.Name
+
+                    local label = string.format("%s [%s][%s] Mut:%s", name, rarity, sizeName, mutation)
+                    table.insert(petList, { label = label, guid = guid, ref = pet })
+                    table.insert(petLabels, label)
+                end
+            end
+        end
+    end
+
+    print("✅ Loaded", #petLabels, "pets")
+    return petLabels
+end
+
+-- โหลดก่อน
+loadMyPets()
+
+-- Button Refresh
+BreedingTab:Button({
+    Title = "Refresh Pet List",
+    Desc = "Reload pets from your pen",
+    Icon = "refresh-cw",
+    Callback = function()
+        loadMyPets()
+        WindUI:Notify({
+            Title = "Refreshed!",
+            Content = "Loaded " .. #petLabels .. " pets",
+            Duration = 3,
+            Icon = "check",
+        })
+    end
+})
+
+-- Dropdown Pet 1
+BreedingTab:Dropdown({
+    Title = "Pet 1",
+    Desc = "Select first pet",
+    Values = petLabels,
+    Value = petLabels[1] or "None",
+    Multi = false,
+    AllowNone = false,
+    Callback = function(v)
+        selectedPet1 = v
+        print("Pet 1:", v)
+    end
+})
+
+-- Dropdown Pet 2
+BreedingTab:Dropdown({
+    Title = "Pet 2",
+    Desc = "Select second pet",
+    Values = petLabels,
+    Value = petLabels[2] or "None",
+    Multi = false,
+    AllowNone = false,
+    Callback = function(v)
+        selectedPet2 = v
+        print("Pet 2:", v)
+    end
+})
+
 Window:Tag({
-    Title = "V.1.3.5",
+    Title = "V.1.4.0",
     Icon = "github",
     Color = Color3.fromHex("1F1F1F"),
     Radius = 13,
@@ -522,55 +619,55 @@ local Keybind = SettingsTab:Keybind({
 
 WindUI:AddTheme({
     Name = "Green Theme",
-    
-    Accent = Color3.fromHex("#4ade80"),           -- เขียวกลาง
-    Background = Color3.fromHex("#1a2e1a"),        -- เขียวเข้มมาก (แทนดำ)
+
+    Accent = Color3.fromHex("#4ade80"),
+    Background = Color3.fromHex("#0d1f0d"),
     BackgroundTransparency = 0,
-    Outline = Color3.fromHex("#86efac"),
-    Text = Color3.fromHex("#e2f5e2"),              -- ขาวอมเขียวอ่อน
+    Outline = Color3.fromHex("#4ade80"),
+    Text = Color3.fromHex("#f0fff0"),
     Placeholder = Color3.fromHex("#6b9e7a"),
-    Button = Color3.fromHex("#16a34a"),            -- เขียวกลางเข้ม
+    Button = Color3.fromHex("#4ade80"),          -- ปุ่มเขียวสว่าง
     Icon = Color3.fromHex("#86efac"),
-    
-    Hover = Color3.fromHex("#e2f5e2"),
-    
-    WindowBackground = Color3.fromHex("#1e3a1e"),  -- เขียวเข้ม
-    WindowShadow = Color3.fromHex("#0f1f0f"),
-    
-    DialogBackground = Color3.fromHex("#1e3a1e"),
+
+    Hover = Color3.fromHex("#ffffff"),
+
+    WindowBackground = Color3.fromHex("#0d1f0d"),
+    WindowShadow = Color3.fromHex("#000000"),
+
+    DialogBackground = Color3.fromHex("#0d1f0d"),
     DialogBackgroundTransparency = 0,
-    DialogTitle = Color3.fromHex("#e2f5e2"),
+    DialogTitle = Color3.fromHex("#f0fff0"),
     DialogContent = Color3.fromHex("#bbf7d0"),
-    DialogIcon = Color3.fromHex("#86efac"),
-    
-    WindowTopbarButtonIcon = Color3.fromHex("#86efac"),
-    WindowTopbarTitle = Color3.fromHex("#e2f5e2"),
+    DialogIcon = Color3.fromHex("#4ade80"),
+
+    WindowTopbarButtonIcon = Color3.fromHex("#4ade80"),
+    WindowTopbarTitle = Color3.fromHex("#f0fff0"),
     WindowTopbarAuthor = Color3.fromHex("#bbf7d0"),
-    WindowTopbarIcon = Color3.fromHex("#86efac"),
-    
-    TabBackground = Color3.fromHex("#166534"),     -- เขียวเข้มกลาง
-    TabTitle = Color3.fromHex("#e2f5e2"),
-    TabIcon = Color3.fromHex("#86efac"),
-    
-    ElementBackground = Color3.fromHex("#14532d"), -- เขียวเข้ม
-    ElementTitle = Color3.fromHex("#e2f5e2"),
-    ElementDesc = Color3.fromHex("#bbf7d0"),
-    ElementIcon = Color3.fromHex("#86efac"),
-    
-    PopupBackground = Color3.fromHex("#1e3a1e"),
+    WindowTopbarIcon = Color3.fromHex("#4ade80"),
+
+    TabBackground = Color3.fromHex("#1a3a1a"),   -- tab เข้มกว่า window นิดนึง
+    TabTitle = Color3.fromHex("#f0fff0"),
+    TabIcon = Color3.fromHex("#4ade80"),
+
+    ElementBackground = Color3.fromHex("#1f4a1f"), -- element สว่างกว่า tab ชัดเจน
+    ElementTitle = Color3.fromHex("#f0fff0"),
+    ElementDesc = Color3.fromHex("#86efac"),
+    ElementIcon = Color3.fromHex("#4ade80"),
+
+    PopupBackground = Color3.fromHex("#0d1f0d"),
     PopupBackgroundTransparency = 0,
-    PopupTitle = Color3.fromHex("#e2f5e2"),
+    PopupTitle = Color3.fromHex("#f0fff0"),
     PopupContent = Color3.fromHex("#bbf7d0"),
-    PopupIcon = Color3.fromHex("#86efac"),
-    
-    Toggle = Color3.fromHex("#16a34a"),
-    ToggleBar = Color3.fromHex("#4ade80"),
-    
-    Checkbox = Color3.fromHex("#16a34a"),
-    CheckboxIcon = Color3.fromHex("#e2f5e2"),
-    
-    Slider = Color3.fromHex("#16a34a"),
-    SliderThumb = Color3.fromHex("#86efac"),
+    PopupIcon = Color3.fromHex("#4ade80"),
+
+    Toggle = Color3.fromHex("#4ade80"),          -- toggle สว่างชัด
+    ToggleBar = Color3.fromHex("#166534"),
+
+    Checkbox = Color3.fromHex("#4ade80"),        -- checkbox สว่างชัด
+    CheckboxIcon = Color3.fromHex("#0d1f0d"),    -- icon มืดตัดกับ checkbox
+
+    Slider = Color3.fromHex("#4ade80"),          -- slider สว่างชัด
+    SliderThumb = Color3.fromHex("#ffffff"),     -- thumb ขาวเห็นชัด
 })
 
 WindUI:SetTheme("Green Theme")

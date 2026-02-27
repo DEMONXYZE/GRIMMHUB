@@ -268,7 +268,7 @@ local function scanPets()
                     scannedPets[guid] = true -- จำไว้ไม่ต้องเช็คซ้ำ
                     continue
                 end
-ไ
+                
                 print(string.format("✅ [%s][%s][%s] Found: %s", folderName, rarity, sizeName, petName))
 
                 WindUI:Notify({

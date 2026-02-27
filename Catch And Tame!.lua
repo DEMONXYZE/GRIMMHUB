@@ -100,6 +100,7 @@ local PetsTab = Window:Tab({
 local autoPetScan = false
 local selectedRarities = {"Mythical", "Exclusive", "Secret"}
 local selectedSizes = {"Tiny", "Normal", "Big", "Huge", "Colossal"}
+local scannedPets = {}
 
 -- Dropdown Rarity
 PetsTab:Dropdown({
@@ -124,6 +125,30 @@ PetsTab:Dropdown({
     AllowNone = false,
     Callback = function(v)
         selectedSizes = v
+    end
+})
+
+-- Dropdown Blacklist
+local blacklistedPets = {"Behemoth", "Axolotl", "Cerberus", "Kitsune", "Red Panda", "Frost Eagle", "Yeti", "Glacial Gorilla"}
+
+PetsTab:Dropdown({
+    Title = "Blacklist Pet",
+    Desc = "Selected pets will be skipped",
+    Values = {
+        "Behemoth",
+        "Axolotl", 
+        "Cerberus",
+        "Kitsune",
+        "Red Panda",
+        "Frost Eagle",
+        "Yeti",
+        "Glacial Gorilla"
+    },
+    Value = {"Behemoth", "Axolotl", "Cerberus", "Kitsune", "Red Panda", "Frost Eagle", "Yeti", "Glacial Gorilla"},
+    Multi = true,
+    AllowNone = true,
+    Callback = function(v)
+        blacklistedPets = v or {}
     end
 })
 
@@ -224,20 +249,38 @@ local function scanPets()
             end
 
             if rarityMatch and sizeMatch then
-            print(string.format("✅ [%s][%s][%s] Found: %s — Teleporting!", folderName, rarity, sizeName, petName))
+                local guid = pet:GetAttribute("Guid") or pet.Name
 
-            WindUI:Notify({
-                Title = string.format("[%s] %s — %s", rarity, petName, folderName),
-                Content = string.format("Size: %s", sizeName),
-                Duration = 5,
-                Icon = "paw-print",
-            })
+                -- ข้ามถ้าเคยสแกนแล้ว
+                if scannedPets[guid] then continue end
 
-            -- teleportToPet(pet)
-            -- task.wait(1) -- รอวาปถึงก่อน
+                -- เช็ค Blacklist
+                local isBlacklisted = false
+                for _, blackName in ipairs(blacklistedPets) do
+                    if petName == blackName then
+                        isBlacklisted = true
+                        break
+                    end
+                end
 
-            catchPet(pet, folderName) -- จับเลย
-            task.wait(1)
+                if isBlacklisted then
+                    print(string.format("⛔ Skipped (Blacklisted): %s", petName))
+                    scannedPets[guid] = true -- จำไว้ไม่ต้องเช็คซ้ำ
+                    continue
+                end
+ไ
+                print(string.format("✅ [%s][%s][%s] Found: %s", folderName, rarity, sizeName, petName))
+
+                WindUI:Notify({
+                    Title = string.format("[%s] %s — %s", rarity, petName, folderName),
+                    Content = string.format("Size: %s", sizeName),
+                    Duration = 5,
+                    Icon = "paw-print",
+                })
+
+                catchPet(pet, folderName)
+                scannedPets[guid] = true -- จำว่าจับแล้ว
+                task.wait(1)
             end
         end
     end
@@ -401,7 +444,7 @@ BreedingTab:Dropdown({
 })
 
 Window:Tag({
-    Title = "V.1.4.0",
+    Title = "V.1.5.0",
     Icon = "github",
     Color = Color3.fromHex("1F1F1F"),
     Radius = 13,
